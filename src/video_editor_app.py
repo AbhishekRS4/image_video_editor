@@ -1,5 +1,6 @@
 import os
 import sys
+import cv2
 import streamlit as st
 from video_utils_opencv import ImageWriterParams, VideoWriterParams, extract_images_from_video, create_video_from_images
 
@@ -47,9 +48,45 @@ def vid_to_imgs_opencv():
         st.write(image_writer_params)
         extract_images_from_video(image_writer_params)
 
+def image_viewer():
+    st.title("Image viewer")
+    st.write(f"Current working directory - {os.getcwd()}")
+    dir_images = st.sidebar.text_input("Directory to load images", "images")
+    img_format = st.sidebar.selectbox("Image file format for saving", [".png", ".jpg"], index=0)
+    try:
+        st.header(f"Image directory - {dir_images}")
+        list_images = sorted([f for f in os.listdir(dir_images) if f.endswith(img_format)])
+        num_images = len(list_images)
+        image_id = st.sidebar.slider(
+            f"Select image_id ({0}-{num_images-1})", min_value=0, max_value=num_images-1,
+            value=0, step=1,
+        )
+        img = cv2.imread(os.path.join(dir_images, list_images[image_id]))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        st.image(img, caption=list_images[image_id])
+    except:
+        st.error(f"Images directory {dir_images} does not contain images")
+        return
+
+def video_player():
+    st.title("Video player")
+    st.write(f"Current working directory - {os.getcwd()}")
+    file_video = st.sidebar.text_input("Video file", "sample.mp4")
+    try:
+        st.header(f"Playing video file - {file_video}")
+        video_file_des = open(file_video, "rb")
+        video_bytes = video_file_des.read()
+        st.video(video_bytes)
+    except:
+        st.error(f"Error in loading the video file - {file_video}")
+        return
+
+
 video_editor_modes = {
     "Images to video opencv" : imgs_to_vid_opencv,
     "Video to images opencv" : vid_to_imgs_opencv,
+    "Image viewer" : image_viewer,
+    "Video player" : video_player,
 }
 
 def main():
