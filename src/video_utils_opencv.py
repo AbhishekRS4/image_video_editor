@@ -19,6 +19,15 @@ def create_directory(directory_path):
 
 class VideoToImageWriter:
     def __init__(self, file_video, dir_images, img_prefix, img_format, img_id_start):
+        """
+        Parameters
+        ----------
+        file_video (str) : full path of video file
+        dir_images (str) : full path of directory to save images
+        img_prefix (str) : prefix name for image files
+        img_format (str) : image file format
+        img_id_start (int) : starting image id
+        """
         self.params = self.ImageParams(file_video=file_video, dir_images=dir_images,
             img_prefix=img_prefix, img_format=img_format, img_id_start=img_id_start)
 
@@ -66,6 +75,17 @@ class VideoToImageWriter:
 
 class ImageToVideoWriter:
     def __init__(self, fps, width, height, file_video, dir_images, img_format, video_encoder):
+        """
+        Parameters
+        ----------
+        fps (int) : fps of video
+        width (int) : width of the video
+        height (int) : height of the video
+        file_video (str) : full path of video file
+        dir_images (str) : full path of directory containing images
+        img_format (str) : image file format to be used
+        video_encoder (str) : video encoder to be used
+        """
         self.params = self.VideoParams(fps=fps, width=width, height=height, file_video=file_video,
             dir_images=dir_images, img_format=img_format, video_encoder=video_encoder)
 
