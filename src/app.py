@@ -50,7 +50,7 @@ def saved_images_to_video_ffmpeg():
         else:
             st.error(f"Num images : {num_images}, not enough")
 
-def images_to_video_ffmpeg():
+def streaming_images_to_video_ffmpeg():
     st.title("Video generator from images - ffmpeg")
     st.write(f"Current working dir - {os.getcwd()}")
     fps = st.sidebar.selectbox("FPS", [10, 15, 30, 60], index=0)
@@ -180,10 +180,10 @@ def video_player():
         return
 
 video_editor_modes = {
-    "Images to video ffmpeg" : images_to_video_ffmpeg,
-    "Saved images to video ffmpeg" : saved_images_to_video_ffmpeg,
-    "Images to video opencv" : images_to_video_opencv,
-    "Video to images opencv" : video_to_images_opencv,
+    "FFMPEG - streaming images to video" : streaming_images_to_video_ffmpeg,
+    "FFMPEG - saved images to video" : saved_images_to_video_ffmpeg,
+    "OpenCV - images to video" : images_to_video_opencv,
+    "OpenCV - video to images" : video_to_images_opencv,
     "Image viewer" : image_viewer,
     "Video player" : video_player,
 }
