@@ -3,7 +3,7 @@ import sys
 import cv2
 import streamlit as st
 
-from video_utils_opencv import VideoToImageWriter, ImageToVideoWriter
+from video_utils_opencv import VideoWriter, VideoReader
 from file_utils import get_list_images, get_abs_path, delete_file, create_directory
 from video_utils_ffmpeg import FFMPEGImageToVideoWriter, FFMPEGSavedImageToVideoWriter
 
@@ -119,7 +119,7 @@ def images_to_video_opencv():
 
     if start_button:
         num_images = 0
-        opencv_video_writer = ImageToVideoWriter(fps=fps, width=width, height=height,
+        opencv_video_writer = VideoWriter(fps=fps, width=width, height=height,
             file_video=file_video, video_encoder=video_encoder)
         st.write(opencv_video_writer.params)
 
@@ -129,7 +129,7 @@ def images_to_video_opencv():
 
         dir_out = os.path.dirname(file_video)
         if not os.path.isdir(dir_out):
-            create_directory(dir_out)
+            _ = create_directory(dir_out)
             st.write(f"Created directory : {dir_out}")
 
         if os.path.isfile(file_video):
@@ -166,17 +166,40 @@ def video_to_images_opencv():
     img_prefix = st.sidebar.text_input("Prefix to use for image files", "image-")
     img_format = st.sidebar.selectbox("Image file format for saving", [".png", ".jpg"], index=0)
     img_id_start = st.sidebar.selectbox("Image start id to use", [10000, 100000, 1000000], index=0)
-    image_writer = VideoToImageWriter(
-        file_video=file_video,
-        dir_images=dir_images,
-        img_prefix=img_prefix,
-        img_format=img_format,
-        img_id_start=img_id_start
-    )
     start_button = st.sidebar.button("Start image extraction")
+
+    file_video = get_abs_path(file_video)
+    dir_images = get_abs_path(dir_images)
+
     if start_button:
-        st.write(image_writer.params)
-        image_writer.generate_images_from_video()
+        if not os.path.isfile(file_video):
+            st.error(f"not found, video file: {file_video}")
+            return
+
+        opencv_video_reader = VideoReader(file_video)
+
+        try:
+            opencv_video_reader.init_video_reader()
+        except:
+            st.error(f"failed to load the video: {file_video}")
+            return
+
+        if not os.path.isdir(dir_images):
+            _ = create_directory(dir_images)
+            st.write(f"Created directory : {dir_images}")
+
+        num_images = opencv_video_reader.get_num_images_in_video()
+        st.write(f"Extracting {num_images} images from {file_video}")
+        progress_bar = st.progress(0.0)
+        for i in range(num_images):
+            success, image_frame = opencv_video_reader.get_nth_image(i)
+            if not success:
+                break
+            file_name = os.path.join(dir_images, img_prefix + str(img_id_start+i) + img_format)
+            st.write(file_name)
+            cv2.imwrite(file_name, image_frame)
+            progress_bar.progress((i+1)/num_images)
+        st.success(f"Extraction of {num_images} images completed, images are saved in : {dir_images}")
 
 def image_viewer():
     st.title("Image viewer")
