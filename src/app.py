@@ -32,7 +32,7 @@ def saved_images_to_video_ffmpeg():
             list_images = get_list_images(dir_images, img_format)
             num_images = len(list_images)
         else:
-            st.error(f"not found dir : {dir_images}")
+            st.error(f"not found, images dir : {dir_images}")
             return
 
         if os.path.isfile(file_video):
@@ -75,7 +75,7 @@ def streaming_images_to_video_ffmpeg():
             list_images = get_list_images(dir_images, img_format)
             num_images = len(list_images)
         else:
-            st.error(f"dir : {dir_images} not found")
+            st.error(f"not found, images dir : {dir_images}")
             return
 
         if os.path.isfile(file_video):
@@ -112,19 +112,51 @@ def images_to_video_opencv():
     dir_images = st.sidebar.text_input("Directory to read images", "images")
     img_format = st.sidebar.selectbox("Image file format to be used", [".png", ".jpg"], index=0)
     video_encoder = st.sidebar.selectbox("Video encoder to use", ["mp4v", "xvid"], index=0)
-    video_writer = ImageToVideoWriter(
-        fps=fps,
-        width=width,
-        height=height,
-        file_video=file_video,
-        dir_images=dir_images,
-        img_format=img_format,
-        video_encoder=video_encoder
-    )
     start_button = st.sidebar.button("Start video encoding")
+
+    file_video = get_abs_path(file_video)
+    dir_images = get_abs_path(dir_images)
+
     if start_button:
-        st.write(video_writer.params)
-        video_writer.generate_video_from_images()
+        num_images = 0
+        opencv_video_writer = ImageToVideoWriter(fps=fps, width=width, height=height,
+            file_video=file_video, video_encoder=video_encoder)
+        st.write(opencv_video_writer.params)
+
+        if not os.path.isdir(dir_images):
+            st.error(f"not found, images dir : {dir_images}")
+            return
+
+        dir_out = os.path.dirname(file_video)
+        if not os.path.isdir(dir_out):
+            create_directory(dir_out)
+            st.write(f"Created directory : {dir_out}")
+
+        if os.path.isfile(file_video):
+            delete_file(file_video)
+            st.write(f"Deleting existing video : {file_video}")
+
+        list_images = sorted([f for f in os.listdir(dir_images) if f.endswith(img_format)])
+        num_images = len(list_images)
+
+        if num_images > fps:
+            st.write(f"Starting video generation with {num_images} images")
+
+            img = cv2.imread(os.path.join(dir_images, list_images[0]))
+            if (img.shape[0] != height or img.shape[1] != width):
+                st.error(f"Image dimensions {img.shape[1]}x{img.shape[0]} mismatch with video dimensions {width}x{height}")
+                return
+
+            opencv_video_writer.init_video_writer()
+            progress_bar = st.progress(0.0)
+            for i in range(num_images):
+                img = cv2.imread(os.path.join(dir_images, list_images[i]))
+                opencv_video_writer.write_image_to_video(img)
+                progress_bar.progress((i+1)/num_images)
+            opencv_video_writer.close_video_writer()
+            st.success(f"Video successfully created, saved in {file_video}")
+        else:
+            st.error(f"Num images : {num_images}, not enough")
 
 def video_to_images_opencv():
     st.title("Image extractor from video - opencv")
