@@ -3,12 +3,55 @@ import sys
 import cv2
 import streamlit as st
 
-from video_utils_ffmpeg import FFMPEGImageToVideoWriter
 from video_utils_opencv import VideoToImageWriter, ImageToVideoWriter
 from file_utils import get_list_images, get_abs_path, delete_file, create_directory
+from video_utils_ffmpeg import FFMPEGImageToVideoWriter, FFMPEGSavedImageToVideoWriter
+
+def saved_images_to_video_ffmpeg():
+    st.title("Video generator from saved images - ffmpeg")
+    st.write(f"Current working dir - {os.getcwd()}")
+    fps = st.sidebar.selectbox("FPS", [10, 15, 30, 60], index=0)
+    crf = st.sidebar.number_input("CRF (0-51)", value=23, min_value=0, max_value=51)
+    file_video = st.sidebar.text_input("Video file to be created", "sample.mp4")
+    dir_images = st.sidebar.text_input("dir to read images", "images")
+    img_format = st.sidebar.selectbox("Image file format to be used", [".png", ".jpg"], index=0)
+    video_encoder = st.sidebar.selectbox("Video encoder to use", ["libx264", "libx265"], index=0)
+    start_button = st.sidebar.button("Start video encoding")
+
+    file_video = get_abs_path(file_video)
+    dir_images = get_abs_path(dir_images)
+
+    if start_button:
+        num_images = 0
+        ffmpeg_video_writer = FFMPEGSavedImageToVideoWriter(fps=fps, crf=crf,
+            file_video=file_video, dir_images=dir_images, img_format=img_format,
+            video_encoder=video_encoder)
+        st.write(ffmpeg_video_writer.ffmpeg_params)
+
+        if os.path.isdir(dir_images):
+            list_images = get_list_images(dir_images, img_format)
+            num_images = len(list_images)
+        else:
+            st.error(f"not found dir : {dir_images}")
+            return
+
+        if os.path.isfile(file_video):
+            delete_file(file_video)
+            st.write(f"Deleting existing video : {file_video}")
+
+        if num_images > fps:
+            st.write(f"Images dir : {dir_images}")
+            st.write(f"Starting video generation with {num_images} images")
+            try:
+                ffmpeg_video_writer.generate_video_from_saved_images()
+                st.success(f"Video successfully created, saved in {file_video}")
+            except:
+                st.error("unknown ffmpeg error")
+        else:
+            st.error(f"Num images : {num_images}, not enough")
 
 def images_to_video_ffmpeg():
-    st.title("Video creator from images - ffmpeg")
+    st.title("Video generator from images - ffmpeg")
     st.write(f"Current working dir - {os.getcwd()}")
     fps = st.sidebar.selectbox("FPS", [10, 15, 30, 60], index=0)
     width = st.sidebar.number_input("Image width", value=640)
@@ -60,7 +103,7 @@ def images_to_video_ffmpeg():
             st.error(f"Num images : {num_images}, not enough")
 
 def images_to_video_opencv():
-    st.title("Video creator from images - opencv")
+    st.title("Video generator from images - opencv")
     st.write(f"Current working dir - {os.getcwd()}")
     fps = st.sidebar.selectbox("FPS", [10, 15, 30, 60], index=0)
     width = st.sidebar.number_input("Image width", value=640)
@@ -138,6 +181,7 @@ def video_player():
 
 video_editor_modes = {
     "Images to video ffmpeg" : images_to_video_ffmpeg,
+    "Saved images to video ffmpeg" : saved_images_to_video_ffmpeg,
     "Images to video opencv" : images_to_video_opencv,
     "Video to images opencv" : video_to_images_opencv,
     "Image viewer" : image_viewer,
