@@ -4,63 +4,35 @@ import cv2
 import numpy as np
 from dataclasses import dataclass
 
-class VideoToImageWriter:
-    def __init__(self, file_video, dir_images, img_prefix, img_format, img_id_start):
+class VideoReader:
+    def __init__(self, file_video):
         """
         Parameters
         ----------
-        file_video (str) : full path of video file
-        dir_images (str) : full path of directory to save images
-        img_prefix (str) : prefix name for image files
-        img_format (str) : image file format
-        img_id_start (int) : starting image id
+        file_video (str) : full path of valid video file
         """
-        self.params = self.ImageParams(file_video=file_video, dir_images=dir_images,
-            img_prefix=img_prefix, img_format=img_format, img_id_start=img_id_start)
+        self.num_images = None
+        self.video_reader = None
+        self.file_video = file_video
 
-    @dataclass
-    class ImageParams:
-        file_video : str
-        dir_images : str
-        img_prefix : str
-        img_format : str
-        img_id_start : int
+    def init_video_reader(self):
+        if self.video_reader is None:
+            self.video_reader = cv2.VideoCapture(self.file_video)
+            self.num_images = int(self.video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
+        return
 
-    def generate_images_from_video(self):
-        if not os.path.isfile(self.params.file_video):
-            st.error(f"Video file: {self.params.file_video} does not exist")
-            return
+    def get_num_images_in_video(self):
+        return self.num_images
 
-        create_directory(self.params.dir_images)
+    def get_next_image(self):
+        ret_val, img = self.video_reader.read()
+        return ret_val, img
 
-        try:
-            video_reader = cv2.VideoCapture(self.params.file_video)
-        except:
-            st.error(f"failed to load the video: {self.params.file_video}")
-            return
+    def get_nth_image(self, n):
+        self.video_reader.set(cv2.CAP_PROP_POS_FRAMES, n)
+        return self.get_next_image()
 
-        num_images = int(video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
-        success = True
-        image_id = self.params.img_id_start
-        image_count = 0
-        st.write(f"Extracting {num_images} images from {self.params.file_video}")
-        progress_bar = st.progress(0.0)
-        while success:
-            success, image_frame = video_reader.read()
-
-            if not success:
-                break
-
-            cv2.imwrite(os.path.join(self.params.dir_images, self.params.img_prefix +\
-                str(image_id) + self.params.img_format), image_frame
-            )
-            image_id += 1
-            image_count += 1
-            progress_bar.progress(image_count / num_images)
-        st.write(f"Extraction of {image_id - self.params.img_id_start} images completed, images are in : {self.params.dir_images} \n")
-        st.success("Image extraction from the video completed")
-
-class ImageToVideoWriter:
+class VideoWriter:
     def __init__(self, fps, width, height, file_video, video_encoder):
         """
         Parameters
