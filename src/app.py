@@ -8,7 +8,7 @@ from file_utils import get_list_images, get_abs_path, delete_file, create_direct
 from video_utils_ffmpeg import FFMPEGImageToVideoWriter, FFMPEGSavedImageToVideoWriter
 
 def saved_images_to_video_ffmpeg():
-    st.title("Video generator from saved images - ffmpeg")
+    st.title("FFMPEG - Video generator from saved images")
     st.write(f"Current working dir - {os.getcwd()}")
     fps = st.sidebar.selectbox("FPS", [10, 15, 30, 60], index=0)
     crf = st.sidebar.number_input("CRF (0-51)", value=23, min_value=0, max_value=51)
@@ -51,7 +51,7 @@ def saved_images_to_video_ffmpeg():
             st.error(f"Num images : {num_images}, not enough")
 
 def streaming_images_to_video_ffmpeg():
-    st.title("Video generator from images - ffmpeg")
+    st.title("FFMPEG - Video generator from streaming images")
     st.write(f"Current working dir - {os.getcwd()}")
     fps = st.sidebar.selectbox("FPS", [10, 15, 30, 60], index=0)
     width = st.sidebar.number_input("Image width", value=640)
@@ -103,7 +103,7 @@ def streaming_images_to_video_ffmpeg():
             st.error(f"Num images : {num_images}, not enough")
 
 def images_to_video_opencv():
-    st.title("Video generator from images - opencv")
+    st.title("OpenCV - Video generator from images")
     st.write(f"Current working dir - {os.getcwd()}")
     fps = st.sidebar.selectbox("FPS", [10, 15, 30, 60], index=0)
     width = st.sidebar.number_input("Image width", value=640)
@@ -140,6 +140,7 @@ def images_to_video_opencv():
         num_images = len(list_images)
 
         if num_images > fps:
+            st.write(f"Images dir : {dir_images}")
             st.write(f"Starting video generation with {num_images} images")
 
             img = cv2.imread(os.path.join(dir_images, list_images[0]))
@@ -159,7 +160,7 @@ def images_to_video_opencv():
             st.error(f"Num images : {num_images}, not enough")
 
 def video_to_images_opencv():
-    st.title("Image extractor from video - opencv")
+    st.title("OpenCV - Image extractor from video")
     st.write(f"Current working dir - {os.getcwd()}")
     file_video = st.sidebar.text_input("Video file to load", "sample.mp4")
     dir_images = st.sidebar.text_input("Directory to save images", "images")
@@ -189,6 +190,7 @@ def video_to_images_opencv():
             st.write(f"Created directory : {dir_images}")
 
         num_images = opencv_video_reader.get_num_images_in_video()
+        st.write(f"Video file : {file_video}")
         st.write(f"Extracting {num_images} images from {file_video}")
         progress_bar = st.progress(0.0)
         for i in range(num_images):
@@ -196,7 +198,6 @@ def video_to_images_opencv():
             if not success:
                 break
             file_name = os.path.join(dir_images, img_prefix + str(img_id_start+i) + img_format)
-            st.write(file_name)
             cv2.imwrite(file_name, image_frame)
             progress_bar.progress((i+1)/num_images)
         st.success(f"Extraction of {num_images} images completed, images are saved in : {dir_images}")
@@ -206,6 +207,7 @@ def image_viewer():
     st.write(f"Current working dir - {os.getcwd()}")
     dir_images = st.sidebar.text_input("Directory to load images", "images")
     img_format = st.sidebar.selectbox("Image file format for saving", [".png", ".jpg"], index=0)
+    dir_images = get_abs_path(dir_images)
     try:
         st.header(f"Image dir - {dir_images}")
         list_images = sorted([f for f in os.listdir(dir_images) if f.endswith(img_format)])
@@ -218,13 +220,14 @@ def image_viewer():
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         st.image(img, caption=list_images[image_id])
     except:
-        st.error(f"Images dir {dir_images} does not contain images")
+        st.error(f"not found, images dir : {dir_images}")
         return
 
 def video_player():
     st.title("Video player")
     st.write(f"Current working dir - {os.getcwd()}")
     file_video = st.sidebar.text_input("Video file", "sample.mp4")
+    file_video = get_abs_path(file_video)
     try:
         st.header(f"Playing video file - {file_video}")
         video_file_des = open(file_video, "rb")
