@@ -68,3 +68,61 @@ class VideoWriter:
 
     def write_image_to_video(self, image_array):
         self.video_writer.write(image_array)
+
+def write_text_to_image(img, text, text_position, font, font_scale, color_rgb):
+    img = cv2.putText(img, text, text_position, fontFace=font, fontScale=font_scale, color=color_rgb)
+    return img
+
+def get_font_list():
+    list_fonts = [
+        cv2.FONT_HERSHEY_PLAIN, cv2.FONT_HERSHEY_SIMPLEX,
+        cv2.FONT_HERSHEY_DUPLEX, cv2.FONT_HERSHEY_COMPLEX,
+        cv2.FONT_HERSHEY_TRIPLEX, cv2.FONT_HERSHEY_COMPLEX_SMALL,
+        cv2.FONT_HERSHEY_SCRIPT_SIMPLEX, cv2.FONT_HERSHEY_SCRIPT_COMPLEX,
+    ]
+
+    list_font_names = [
+        "PLAIN", "SIMPLEX", "DUPLEX", "COMPLEX", "TRIPLEX", "COMPLEX_SMALL",
+        "SCRIPT_SIMPLEX", "SCRIPT_COMPLEX",
+    ]
+
+    return list_fonts, list_font_names
+
+def get_font_dict():
+    list_fonts, list_font_names = get_font_list()
+    dict_fonts = {}
+    num_fonts = len(list_fonts)
+
+    for i in range(num_fonts):
+        dict_fonts[list_font_names[i]] = list_fonts[i]
+
+    return dict_fonts
+
+def get_font_preview_image():
+    list_fonts, list_font_names = get_font_list()
+    num_fonts = len(list_fonts)
+    pos_x = 40
+    pos_y = 40
+    font_preview_img = np.zeros((360, 360, 3), dtype=np.uint8)
+
+    for i in range(num_fonts):
+        font_preview_img = write_text_to_image(font_preview_img, list_font_names[i],
+            (pos_x, pos_y * (i+1)), list_fonts[i], 1, (255, 255, 255))
+    return font_preview_img
+
+def get_preview_image_with_text(font, text, image_height, image_width, text_position, color_background="black", color_text="white", font_scale=2):
+    preview_image = None
+    color_rgb = None
+
+    if color_background == "black":
+        preview_image = np.zeros((image_height, image_width, 3), dtype=np.uint8)
+    else:
+        preview_image = 255 * np.ones((image_height, image_width, 3), dtype=np.uint8)
+
+    if color_text == "white":
+        color_rgb = (255, 255, 255)
+    else:
+        color_rgb = (0, 0, 0)
+
+    preview_image = write_text_to_image(preview_image, text, text_position, font, font_scale, color_rgb)
+    return preview_image
