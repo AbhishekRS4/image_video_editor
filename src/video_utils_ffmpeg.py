@@ -1,6 +1,6 @@
 import os
 import sys
-import argparse
+import cv2
 import numpy as np
 from dataclasses import dataclass
 from subprocess import Popen, PIPE, DEVNULL
