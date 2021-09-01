@@ -50,6 +50,7 @@ def saved_images_to_video_ffmpeg():
                 st.error("Unknown ffmpeg error")
         else:
             st.error(f"Num images : {num_images}, not enough")
+    return
 
 def streaming_images_to_video_ffmpeg():
     st.title("FFMPEG - video generator from streaming images")
@@ -158,6 +159,10 @@ def streaming_images_to_video_ffmpeg():
             st.success(f"Video successfully created, saved in {file_video}")
         else:
             st.error(f"Num images : {num_images}, not enough")
+    return
+
+def add_prologue_epilogue_to_video_ffmpeg():
+    st.warning("Yet to be implemented")
 
 def images_to_video_opencv():
     st.title("OpenCV - video generator from images")
@@ -215,6 +220,7 @@ def images_to_video_opencv():
             st.success(f"Video successfully created, saved in {file_video}")
         else:
             st.error(f"Num images : {num_images}, not enough")
+    return
 
 def video_to_images_opencv():
     st.title("OpenCV - image extractor from video")
@@ -258,6 +264,7 @@ def video_to_images_opencv():
             cv2.imwrite(file_name, image_frame)
             progress_bar.progress((i+1)/num_images)
         st.success(f"Extraction of {num_images} images completed, images are saved in : {dir_images}")
+    return
 
 def image_viewer():
     st.title("Image viewer")
@@ -294,13 +301,22 @@ def video_player():
         st.error(f"Error in loading the video file - {file_video}")
         return
 
+def app_info():
+    st.title("Image and video editor app info")
+    st.markdown("_About app - Useful for image and video editing_")
+    st.markdown("_Developer - Abhishek R. S._")
+    st.markdown("_Github - [github.com/AbhishekRS4](https://github.com/AbhishekRS4)_")
+    return
+
 video_editor_modes = {
     "FFMPEG - streaming images to video" : streaming_images_to_video_ffmpeg,
+    "FFMPEG - add prologue and epilogue to video" : add_prologue_epilogue_to_video_ffmpeg,
     "FFMPEG - saved images to video" : saved_images_to_video_ffmpeg,
     "OpenCV - images to video" : images_to_video_opencv,
     "OpenCV - video to images" : video_to_images_opencv,
     "Image viewer" : image_viewer,
     "Video player" : video_player,
+    "App info" : app_info,
 }
 
 def main():
